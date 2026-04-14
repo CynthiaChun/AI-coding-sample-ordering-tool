@@ -9,19 +9,7 @@
  */
 
 // --- 設定 ---
-const CONFIG = {
-    // 請填入您的 GCP Client ID
-    CLIENT_ID: '',
-    // 請填入您的 GCP API Key
-    API_KEY: '',
-    // 請填入您的 Google Sheet ID
-    SPREADSHEET_ID: '',
-
-    // Google Sheets Discovery Doc
-    DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
-    // 授權範圍 (讀寫試算表 + 使用者資訊)
-    SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
-};
+// 由外部 config.js 提供全域 CONFIG 物件
 
 // --- 全域變數 ---
 let tokenClient;
@@ -89,8 +77,8 @@ async function handleLoginClick() {
         // 取得 Token 後進行後續載入
         await handleAuthFlow(token);
     } catch (err) {
-        console.error("Login failed:", err);
-        alert("登入失敗，請重試。");
+        console.error("Login failed:", err, err && (err.error || err.message || err.details));
+        alert("登入失敗，請重試。請打開 Console 查看詳細錯誤訊息。");
         showLogin();
         hideLoading();
     }
@@ -191,6 +179,10 @@ function initGapiClient() {
             resolve();
             return;
         }
+        if (typeof gapi === 'undefined') {
+            reject(new Error('gapi is not loaded yet')); 
+            return;
+        }
         gapi.load('client', async () => {
             try {
                 await gapi.client.init({
@@ -223,6 +215,11 @@ function requestAccessToken(forcePrompt = false) {
                 resolve(savedToken);
                 return;
             }
+        }
+
+        if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+            reject(new Error('Google Identity Services is not loaded yet'));
+            return;
         }
 
         tokenClient = google.accounts.oauth2.initTokenClient({

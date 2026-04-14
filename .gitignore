@@ -1,0 +1,9 @@
+# 本地設定檔，保護敏感資訊
+config.js
+
+# IDE
+.vscode/
+.idea/
+
+# 系統檔案
+.DS_Store
